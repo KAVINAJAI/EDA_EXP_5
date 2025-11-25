@@ -35,13 +35,127 @@ To perform bivariate analysis on COVID-19 data and study the relationship betwee
 
 **Program**
 
-**# Your Name**
-**# Your Reg No.**
+**# Your Name:T.KAVINAJAI**
+**# Your Reg No:212223100020**
 
 # Write your code here
+```
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+import numpy as np
+import os
+
+# Load Dataset
+
+url = "https://raw.githubusercontent.com/datasets/covid-19/master/data/countries-aggregated.csv"
+
+try:
+    data = pd.read_csv(url)
+    print(" Dataset loaded successfully from online source.")
+except Exception as e:
+    print(" Online dataset could not be loaded. Using local fallback sample dataset.")
+    # Fallback local sample (if offline)
+    fallback_url = "https://raw.githubusercontent.com/datasets/covid-19/main/data/countries-aggregated.csv"
+    data = pd.read_csv(fallback_url)
+
+# Filter for a Country
+
+country = "India"  # You can change to "USA", "Brazil"
+country_data = data[data['Country'] == country].copy()
+
+# Convert Date to datetime
+country_data['Date'] = pd.to_datetime(country_data['Date'])
+
+# Compute daily new cases and deaths
+country_data['Daily_Cases'] = country_data['Confirmed'].diff().fillna(0)
+country_data['Daily_Deaths'] = country_data['Deaths'].diff().fillna(0)
+
+# Display first few rows
+print("\nSample of processed data:")
+print(country_data.head())
+
+# Bivariate Visualization
+
+plt.figure(figsize=(7,5))
+plt.scatter(country_data['Daily_Cases'], country_data['Daily_Deaths'], alpha=0.5, color='purple')
+plt.title(f'Bivariate Analysis: {country} COVID-19 Daily Cases vs Deaths')
+plt.xlabel('Daily Cases')
+plt.ylabel('Daily Deaths')
+plt.grid(True)
+plt.show()
+
+# Correlation
+
+corr = country_data['Daily_Cases'].corr(country_data['Daily_Deaths'])
+print(f"\n Correlation between Daily Cases and Deaths in {country}: {corr:.3f}")
+
+#Prepare Data for Regression
+
+X = country_data[['Daily_Cases']]
+y = country_data['Daily_Deaths']
+
+# Split into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
 
 
+# Train Linear Regression Model
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Predict & Evaluate
+
+y_pred = model.predict(X_test)
+
+r2 = r2_score(y_test, y_pred)
+rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+
+print(f"\n Model Evaluation for {country}:")
+print(f"   R² Score  = {r2:.3f}")
+print(f"   RMSE      = {rmse:.3f}")
+
+# Actual vs Predicted Plot
+
+plt.figure(figsize=(10,5))
+plt.plot(country_data['Date'][-len(y_test):], y_test, label='Actual Deaths', color='blue')
+plt.plot(country_data['Date'][-len(y_pred):], y_pred, label='Predicted Deaths', color='red', linestyle='--')
+plt.title(f'{country}: COVID-19 Actual vs Predicted Daily Deaths')
+plt.xlabel('Date')
+plt.ylabel('Daily Deaths')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Forecast Future Deaths (Simple Trend)
+
+future_cases = np.linspace(X['Daily_Cases'].max()*0.5, X['Daily_Cases'].max()*1.2, 10).reshape(-1, 1)
+future_pred = model.predict(future_cases)
+
+print("\n Forecast of Future Deaths based on Case Count:")
+for c, d in zip(future_cases.flatten(), future_pred):
+    print(f"   Predicted deaths for {int(c)} cases ≈ {d:.1f}")
+
+# Plot Both Cases and Deaths Over Time
+
+plt.figure(figsize=(10,5))
+plt.plot(country_data['Date'], country_data['Daily_Cases'], label='Daily Cases', color='green')
+plt.plot(country_data['Date'], country_data['Daily_Deaths'], label='Daily Deaths', color='orange')
+plt.title(f'{country}: COVID-19 Daily Cases and Deaths Over Time')
+plt.xlabel('Date')
+plt.ylabel('Count')
+plt.legend()
+plt.grid(True)
+plt.show()
+```
 **Output**
+<img width="714" height="281" alt="image" src="https://github.com/user-attachments/assets/9cb4598b-709e-4f12-984a-529a16207241" />
+<img width="694" height="201" alt="image" src="https://github.com/user-attachments/assets/bcb2d46d-610a-41d0-be55-e72d275d2a1b" />
+<img width="642" height="149" alt="image" src="https://github.com/user-attachments/assets/cee65bf6-2dbc-46eb-9785-5bbe118a478b" />
+<img width="1038" height="578" alt="image" src="https://github.com/user-attachments/assets/df657bdc-6777-46d3-a592-d008d089530f" />
+<img width="964" height="771" alt="image" src="https://github.com/user-attachments/assets/655de865-c4a9-4570-a375-52d0a688c702" />
 
 
 **Result**
